@@ -7013,9 +7013,8 @@ msgstr ""
 msgid "EyeTV input"
 msgstr "EyeTV sarrera"
 
-#: modules/access/file.c:177 modules/access/file.c:304
-#: modules/access/mtp.c:195 modules/access/mtp.c:286 modules/access/vdr.c:368
-#: modules/access/vdr.c:535
+#: modules/access/file.c:177 modules/access/file.c:304 modules/access/mtp.c:195
+#: modules/access/mtp.c:286 modules/access/vdr.c:368 modules/access/vdr.c:535
 msgid "File reading failed"
 msgstr "Huts egin du fitxategia irakurtzean"
 
@@ -7104,8 +7103,8 @@ msgstr "Fitxategi-sarrera"
 #: modules/audio_output/file.c:113 modules/gui/macosx/open.m:130
 #: modules/gui/macosx/open.m:587 modules/gui/macosx/output.m:133
 #: modules/gui/macosx/output.m:217 modules/gui/macosx/output.m:341
-#: modules/gui/qt4/dialogs/plugins.cpp:1391
-#: modules/gui/qt4/dialogs/sout.cpp:69 modules/gui/qt4/dialogs/sout.cpp:118
+#: modules/gui/qt4/dialogs/plugins.cpp:1391 modules/gui/qt4/dialogs/sout.cpp:69
+#: modules/gui/qt4/dialogs/sout.cpp:118
 #: share/lua/http/dialogs/create_stream.html:204
 #: share/lua/http/dialogs/stream_config_window.html:36
 #: share/lua/http/dialogs/stream_window.html:95
@@ -8973,8 +8972,7 @@ msgstr ""
 
 #: modules/access/v4l2/v4l2.c:242 modules/codec/avcodec/avcodec.c:68
 #: modules/codec/x264.c:437 modules/control/hotkeys.c:193
-#: modules/gui/macosx/AddonManager.m:91
-#: modules/gui/qt4/dialogs/convert.cpp:136
+#: modules/gui/macosx/AddonManager.m:91 modules/gui/qt4/dialogs/convert.cpp:136
 #: modules/gui/qt4/dialogs/plugins.cpp:372
 #: modules/gui/qt4/dialogs/preferences.cpp:77
 msgid "All"
@@ -9838,8 +9836,7 @@ msgstr "Ekualizadorea"
 msgid "Flat"
 msgstr "Laua"
 
-#: modules/audio_filter/equalizer_presets.h:54
-#: modules/demux/mp4/id3genres.h:64
+#: modules/audio_filter/equalizer_presets.h:54 modules/demux/mp4/id3genres.h:64
 msgid "Classical"
 msgstr "Klasikoa"
 
@@ -9848,8 +9845,7 @@ msgstr "Klasikoa"
 msgid "Club"
 msgstr "Club"
 
-#: modules/audio_filter/equalizer_presets.h:54
-#: modules/demux/mp4/id3genres.h:35
+#: modules/audio_filter/equalizer_presets.h:54 modules/demux/mp4/id3genres.h:35
 msgid "Dance"
 msgstr "Dance"
 
@@ -9881,23 +9877,19 @@ msgstr "Zuzenean"
 msgid "Party"
 msgstr "Jaia"
 
-#: modules/audio_filter/equalizer_presets.h:56
-#: modules/demux/mp4/id3genres.h:45
+#: modules/audio_filter/equalizer_presets.h:56 modules/demux/mp4/id3genres.h:45
 msgid "Pop"
 msgstr "Pop"
 
-#: modules/audio_filter/equalizer_presets.h:56
-#: modules/demux/mp4/id3genres.h:48
+#: modules/audio_filter/equalizer_presets.h:56 modules/demux/mp4/id3genres.h:48
 msgid "Reggae"
 msgstr "Reggae"
 
-#: modules/audio_filter/equalizer_presets.h:57
-#: modules/demux/mp4/id3genres.h:49
+#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:49
 msgid "Rock"
 msgstr "Rock"
 
-#: modules/audio_filter/equalizer_presets.h:57
-#: modules/demux/mp4/id3genres.h:53
+#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:53
 msgid "Ska"
 msgstr "Ska"
 
@@ -9909,8 +9901,7 @@ msgstr "Soft"
 msgid "Soft rock"
 msgstr "Rock leuna"
 
-#: modules/audio_filter/equalizer_presets.h:57
-#: modules/demux/mp4/id3genres.h:50
+#: modules/audio_filter/equalizer_presets.h:57 modules/demux/mp4/id3genres.h:50
 msgid "Techno"
 msgstr "Techno"
 
@@ -12000,10 +11991,6 @@ msgstr ""
 #: modules/codec/qsv.c:193
 msgid "Intel QuickSync Video encoder for MPEG4-Part10/MPEG2 (aka H.264/H.262)"
 msgstr ""
-
-#: modules/codec/quicktime.c:66
-msgid "QuickTime library decoder"
-msgstr "QuickTime liburutegi-deskodetzailea"
 
 #: modules/codec/rawvideo.c:66
 msgid "Pseudo raw video decoder"
@@ -14942,8 +14929,8 @@ msgstr "Irudia"
 
 #: modules/demux/mjpeg.c:46 modules/demux/mpeg/es.c:50
 #: modules/demux/mpeg/h264.c:43 modules/demux/mpeg/hevc.c:46
-#: modules/demux/rawvid.c:44 modules/demux/subtitle.c:75
-#: modules/demux/vc1.c:43 modules/gui/macosx/open.m:203
+#: modules/demux/rawvid.c:44 modules/demux/subtitle.c:75 modules/demux/vc1.c:43
+#: modules/gui/macosx/open.m:203
 msgid "Frames per Second"
 msgstr "Marko segundoko"
 
@@ -16549,8 +16536,7 @@ msgstr "Gaitu barruti dinamikoko konprimatzailea"
 
 #: modules/gui/macosx/AudioEffects.m:118 modules/gui/macosx/AudioEffects.m:129
 #: modules/gui/macosx/TrackSynchronization.m:60
-#: modules/gui/macosx/VideoEffects.m:96
-#: modules/gui/qt4/dialogs/gototime.cpp:66
+#: modules/gui/macosx/VideoEffects.m:96 modules/gui/qt4/dialogs/gototime.cpp:66
 msgid "Reset"
 msgstr "Berrezarri"
 
@@ -16670,8 +16656,8 @@ msgid "Bookmarks"
 msgstr "Laster-markak"
 
 #: modules/gui/macosx/bookmarks.m:90
-#: modules/gui/qt4/ui/podcast_configuration.h:104
-#: modules/gui/qt4/ui/sout.h:210 modules/gui/qt4/ui/vlm.h:300
+#: modules/gui/qt4/ui/podcast_configuration.h:104 modules/gui/qt4/ui/sout.h:210
+#: modules/gui/qt4/ui/vlm.h:300
 msgid "Add"
 msgstr "Gehitu"
 
@@ -18804,8 +18790,7 @@ msgid ""
 "Set 0 to disable."
 msgstr ""
 
-#: modules/gui/macosx/VideoEffects.m:76
-#: modules/gui/qt4/dialogs/extended.cpp:84
+#: modules/gui/macosx/VideoEffects.m:76 modules/gui/qt4/dialogs/extended.cpp:84
 msgid "Video Effects"
 msgstr "Bideo-efektuak"
 
@@ -18813,8 +18798,7 @@ msgstr "Bideo-efektuak"
 msgid "Basic"
 msgstr "Oinarrizkoa"
 
-#: modules/gui/macosx/VideoEffects.m:83
-#: modules/gui/qt4/ui/video_effects.h:1445
+#: modules/gui/macosx/VideoEffects.m:83 modules/gui/qt4/ui/video_effects.h:1445
 msgid "Geometry"
 msgstr "Geometria"
 
@@ -18831,8 +18815,7 @@ msgstr "Kolorea"
 msgid "Image Adjust"
 msgstr "Doitu irudia"
 
-#: modules/gui/macosx/VideoEffects.m:93
-#: modules/gui/qt4/ui/video_effects.h:1395
+#: modules/gui/macosx/VideoEffects.m:93 modules/gui/qt4/ui/video_effects.h:1395
 msgid "Brightness Threshold"
 msgstr "Distiraren atalasea"
 
@@ -18841,14 +18824,12 @@ msgstr "Distiraren atalasea"
 msgid "Sharpen"
 msgstr "Araztu"
 
-#: modules/gui/macosx/VideoEffects.m:98
-#: modules/gui/qt4/ui/video_effects.h:1400
+#: modules/gui/macosx/VideoEffects.m:98 modules/gui/qt4/ui/video_effects.h:1400
 #: modules/gui/qt4/ui/video_effects.h:1484
 msgid "Sigma"
 msgstr "Sigma"
 
-#: modules/gui/macosx/VideoEffects.m:99
-#: modules/gui/qt4/ui/video_effects.h:1401
+#: modules/gui/macosx/VideoEffects.m:99 modules/gui/qt4/ui/video_effects.h:1401
 msgid "Banding removal"
 msgstr ""
 
@@ -19002,8 +18983,7 @@ msgstr "Mugimendu-lausotzea"
 msgid "Factor"
 msgstr "Faktorea"
 
-#: modules/gui/macosx/VideoEffects.m:157
-#: modules/video_filter/motiondetect.c:49
+#: modules/gui/macosx/VideoEffects.m:157 modules/video_filter/motiondetect.c:49
 msgid "Motion Detect"
 msgstr "Mugimendu-detekzioa"
 
@@ -19036,9 +19016,8 @@ msgstr "Gehitu logotipoa"
 msgid "Logo"
 msgstr "Logotipoa"
 
-#: modules/gui/macosx/VideoEffects.m:207
-#: modules/stream_out/mosaic_bridge.c:128 modules/video_filter/mosaic.c:87
-#: modules/gui/qt4/ui/video_effects.h:1454
+#: modules/gui/macosx/VideoEffects.m:207 modules/stream_out/mosaic_bridge.c:128
+#: modules/video_filter/mosaic.c:87 modules/gui/qt4/ui/video_effects.h:1454
 msgid "Transparency"
 msgstr "Gardentasuna"
 
@@ -19386,8 +19365,7 @@ msgstr "UDP banakako difusioa"
 msgid "UDP Multicast"
 msgstr "UDP multidifusioa"
 
-#: modules/gui/macosx/wizard.m:373
-#: modules/stream_out/transcode/transcode.c:147
+#: modules/gui/macosx/wizard.m:373 modules/stream_out/transcode/transcode.c:147
 msgid "Transcode"
 msgstr "Transkodetu"
 
@@ -20822,8 +20800,8 @@ msgstr "&Aplikatu"
 
 #: modules/gui/qt4/components/simple_preferences.cpp:1328
 #: modules/gui/qt4/dialogs/convert.cpp:109
-#: modules/gui/qt4/dialogs/gototime.cpp:49
-#: modules/gui/qt4/dialogs/open.cpp:108 modules/gui/qt4/dialogs/openurl.cpp:61
+#: modules/gui/qt4/dialogs/gototime.cpp:49 modules/gui/qt4/dialogs/open.cpp:108
+#: modules/gui/qt4/dialogs/openurl.cpp:61
 #: modules/gui/qt4/dialogs/podcast_configuration.cpp:37
 #: modules/gui/qt4/dialogs/preferences.cpp:94
 #: modules/gui/qt4/dialogs/toolbar.cpp:196
@@ -20978,8 +20956,8 @@ msgstr "Ezabatu laster-marka guztiak"
 
 #: modules/gui/qt4/dialogs/bookmarks.cpp:62
 #: modules/gui/qt4/dialogs/errors.cpp:49
-#: modules/gui/qt4/dialogs/extended.cpp:110
-#: modules/gui/qt4/dialogs/help.cpp:66 modules/gui/qt4/dialogs/help.cpp:212
+#: modules/gui/qt4/dialogs/extended.cpp:110 modules/gui/qt4/dialogs/help.cpp:66
+#: modules/gui/qt4/dialogs/help.cpp:212
 #: modules/gui/qt4/dialogs/mediainfo.cpp:79
 #: modules/gui/qt4/dialogs/messages.cpp:81
 #: modules/gui/qt4/dialogs/plugins.cpp:88
@@ -20999,8 +20977,7 @@ msgstr "Byteak"
 msgid "Convert"
 msgstr "Bihurtu"
 
-#: modules/gui/qt4/dialogs/convert.cpp:58
-#: modules/gui/qt4/ui/sprefs_audio.h:433
+#: modules/gui/qt4/dialogs/convert.cpp:58 modules/gui/qt4/ui/sprefs_audio.h:433
 msgid "Destination file:"
 msgstr "Helburuko fitxategia:"
 
@@ -21110,8 +21087,7 @@ msgstr "&Joan"
 msgid "Go to time"
 msgstr "Joan ordu honetara:"
 
-#: modules/gui/qt4/dialogs/help.cpp:86
-#: modules/gui/qt4/dialogs/plugins.cpp:1338
+#: modules/gui/qt4/dialogs/help.cpp:86 modules/gui/qt4/dialogs/plugins.cpp:1338
 #: modules/gui/qt4/dialogs/plugins.cpp:1421
 msgid "About"
 msgstr "Honi buruz"
@@ -23959,8 +23935,7 @@ msgid "Transparency of the mosaic picture."
 msgstr "Mosaiko-irudiaren gardentasuna."
 
 #: modules/stream_out/mosaic_bridge.c:132 modules/video_filter/marq.c:95
-#: modules/video_filter/rss.c:142
-#: share/lua/http/dialogs/mosaic_window.html:100
+#: modules/video_filter/rss.c:142 share/lua/http/dialogs/mosaic_window.html:100
 msgid "X offset"
 msgstr "X desplazamendua"
 
@@ -23969,8 +23944,7 @@ msgid "X coordinate of the upper left corner in the mosaic if non negative."
 msgstr "Mosaikoko goiko ezkerreko izkinako X koordenatua, negatiboa ez bada."
 
 #: modules/stream_out/mosaic_bridge.c:136 modules/video_filter/marq.c:97
-#: modules/video_filter/rss.c:144
-#: share/lua/http/dialogs/mosaic_window.html:118
+#: modules/video_filter/rss.c:144 share/lua/http/dialogs/mosaic_window.html:118
 msgid "Y offset"
 msgstr "Y desplazamendua"
 
@@ -30042,6 +30016,9 @@ msgstr "VLC multimedia-erreproduzigailuaren laguntza"
 #, fuzzy
 msgid "Streaming Output"
 msgstr "Transmisio jarraituaren irteera"
+
+#~ msgid "QuickTime library decoder"
+#~ msgstr "QuickTime liburutegi-deskodetzailea"
 
 #~ msgid ""
 #~ "SAP is a way to publically announce streams that are being sent using "

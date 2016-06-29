@@ -39,6 +39,7 @@
 
 #include "../../codec/a52.h"
 #include "../../codec/dts_header.h"
+#include "id3v2.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -102,7 +103,7 @@ typedef struct
 struct demux_sys_t
 {
     codec_t codec;
-
+    input_title_t *p_title;
     es_out_id_t *p_es;
 
     bool  b_start;
@@ -252,6 +253,8 @@ static int OpenCommon( demux_t *p_demux,
 static int OpenAudio( vlc_object_t *p_this )
 {
     demux_t *p_demux = (demux_t*)p_this;
+    demux_sys_t *p_sys = p_demux->p_sys;
+
     for( int i = 0; p_codecs[i].i_codec != 0; i++ )
     {
         int64_t i_offset;
@@ -817,7 +820,8 @@ static double MpgaXingLameConvertPeak( uint32_t x )
 static int MpgaInit( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
-
+    p_sys->p_title = get_title(p_demux);
+    printf("made it through\n");
     const uint8_t *p_peek;
     int i_peek;
 

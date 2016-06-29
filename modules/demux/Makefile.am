@@ -452,4 +452,3 @@ demux_LTLIBRARIES += libadaptive_plugin.la
 
 libttml_plugin_la_SOURCES = demux/ttml.c
 demux_LTLIBRARIES += libttml_plugin.la
-
