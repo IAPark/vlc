@@ -24,8 +24,8 @@ typedef struct {
 
 typedef struct {
   char id[5];
-  int size;
-  long start;
+  unsigned long size;
+  unsigned long start;
 
 } id3v2_frame_header;
 
@@ -56,6 +56,7 @@ id3v2_header parse_header(stream_t *stream) {
   identifier[3] = 0;
 
   stream_Read(stream, identifier, 3);
+  printf("identifier=%s\n",identifier);
 
   if (memcmp(identifier,"ID3", 3) != 0) {
     header.valid = 0; //false
@@ -98,8 +99,10 @@ id3v2_frame_header parse_frame_header(stream_t* stream) {
   return header;
 }
 
-void skip_frame(stream_t* stream, id3v2_frame_header frame) {
-  stream_Seek(stream, frame.size + frame.start + 10);
+int skip_frame(stream_t* stream, id3v2_frame_header frame) {
+  printf("at %lu skiping to %lu\n", stream_Tell(stream), frame.size + frame.start + 10);
+
+  return stream_Seek(stream, frame.size + frame.start + 10);
 }
 
 chapter_frame parse_chapter(FILE* stream) {
@@ -161,13 +164,17 @@ chapters get_chapters(FILE* stream) {
   chapters chaps;
   chaps.size = 0;
   id3v2_header header = parse_header(stream);
+  printf("finding chapters at %lu \n", stream_Tell(stream));
   while (stream_Tell(stream) < header.size) {
     id3v2_frame_header frame_header = parse_frame_header(stream);
-    skip_frame(stream, frame_header);
+    if(skip_frame(stream, frame_header) < 0) {
+      return chaps;
+    }
     if (memcmp(frame_header.id, "CHAP", 4) == 0) {
       chaps.size += 1;
     }
   }
+  printf("found are chapters\n");
   stream_Seek(stream, 0);
   header = parse_header(stream);
   chaps.chapters = malloc (sizeof(chapter)*chaps.size);
@@ -187,8 +194,12 @@ chapters get_chapters(FILE* stream) {
 input_title_t* get_title(demux_t* p_demux) {
   input_title_t *title = vlc_input_title_New();
   uint64_t start = stream_Tell(p_demux->s);
-  chapters chaps = get_chapters(p_demux->s);
+  printf("at %li\n", start);
+
   stream_Seek(p_demux->s, 0);
+
+  printf("getting chapter info\n");
+  chapters chaps = get_chapters(p_demux->s);
 
   for(int i = 0; i < chaps.size; ++i) {
     printf("%s::%i\n", chaps.chapters[i].title, chaps.chapters[i].start_time);
@@ -201,15 +212,4 @@ input_title_t* get_title(demux_t* p_demux) {
   stream_Seek(p_demux->s, start);
   p_demux->info.i_update |= INPUT_UPDATE_TITLE_LIST;
   return title;
-}
-
-void foo(demux_t* p_demux) {
-      uint64_t start = stream_Tell(p_demux->s);
-      chapters chaps = get_chapters(p_demux->s);
-      stream_Seek(p_demux->s, 0);
-
-      for(int i = 0; i < chaps.size; ++i) {
-        printf("%s::%i\n", chaps.chapters[i].title, chaps.chapters[i].start_time);
-      }
-      stream_Seek(p_demux->s, start);
 }
