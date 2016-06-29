@@ -429,7 +429,43 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
           return VLC_SUCCESS;
         }
 
+        case DEMUX_SET_TITLE:
+        {
+          printf("DEMUX_SET_TITLE\n");
+
+            const int i_title = (int)va_arg( args, int );
+            if( !p_sys->p_title || i_title != 0 )
+                return VLC_EGENERIC;
+            return VLC_SUCCESS;
+        }
+
+        case DEMUX_SET_SEEKPOINT:
+        {
+          printf("DEMUX_SET_SEEKPOINT\n");
+
+            const int i_seekpoint = (int)va_arg( args, int );
+            if( !p_sys->p_title )
+                return VLC_EGENERIC;
+            if(i_seekpoint >= p_sys->p_title->i_seekpoint) {
+              return VLC_EGENERIC;
+            }
+            fflush(stdout);
+            printf("time =  %i\n", p_sys->p_title->seekpoint[i_seekpoint]->i_time_offset );
+            fflush(stdout);
+            int64_t time = p_sys->p_title->seekpoint[i_seekpoint]->i_time_offset;
+            int temp = demux_Control(p_demux, DEMUX_SET_TIME, time, true );
+            printf("got %i\n", temp);
+            fflush(stdout);
+
+            return temp;
+        }
+
+        case DEMUX_SET_POSITION:
+        printf("setting position\n");
+
+
         case DEMUX_SET_TIME:
+            printf("setting time\n");
             /* FIXME TODO: implement a high precision seek (with mp3 parsing)
              * needed for multi-input */
         default:

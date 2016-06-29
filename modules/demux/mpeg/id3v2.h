@@ -113,17 +113,17 @@ chapter_frame parse_chapter(FILE* stream) {
   }
   unsigned char time[4];
   stream_Read(stream, time, 4);
-  frame.start_time = time[3] + time[2]*128 + time[1]*128*128 + time[0]*128*128;
+  frame.start_time =  time[3] + time[2]*128*2 + time[1]*128*128*4 + time[0]*128*128*8;
 
   stream_Read(stream, time, 4);
-  frame.end_time = time[3] + time[2]*128 + time[1]*128*128 + time[0]*128*128;
+  frame.end_time =  time[3] + time[2]*128*2 + time[1]*128*128*4 + time[0]*128*128*8;
 
 
   stream_Read(stream, time, 4);
-  frame.start_offset = time[3] + time[2]*128 + time[1]*128*128 + time[0]*128*128;
+  frame.start_offset =  time[3] + time[2]*128*2 + time[1]*128*128*4 + time[0]*128*128*8;
 
   stream_Read(stream, time, 4);
-  frame.end_offset = time[3] + time[2]*128 + time[1]*128*128 + time[0]*128*128;
+  frame.end_offset =  time[3] + time[2]*128*2 + time[1]*128*128*4 + time[0]*128*128*8;
   return frame;
 }
 
@@ -194,7 +194,7 @@ input_title_t* get_title(demux_t* p_demux) {
     printf("%s::%i\n", chaps.chapters[i].title, chaps.chapters[i].start_time);
 
     seekpoint_t *p_seekpoint = vlc_seekpoint_New();
-    p_seekpoint->i_time_offset = chaps.chapters[i].start_time;
+    p_seekpoint->i_time_offset = chaps.chapters[i].start_time * 1000;
     p_seekpoint->psz_name = chaps.chapters[i].title; // releasing responsibality for closing
     TAB_APPEND( title->i_seekpoint, title->seekpoint, p_seekpoint );
   }
