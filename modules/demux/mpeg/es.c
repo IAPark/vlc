@@ -409,6 +409,26 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             return i_ret;
         }
 
+        case DEMUX_GET_TITLE_INFO:
+        {
+          fprintf( stdout, "DEMUX_GET_TITLE_INFO\n");
+
+          input_title_t ***ppp_title = (input_title_t***)va_arg( args, input_title_t*** );
+          int *pi_int    = (int*)va_arg( args, int* );
+          int *pi_title_offset = (int*)va_arg( args, int* );
+          int *pi_seekpoint_offset = (int*)va_arg( args, int* );
+
+          if( !p_sys->p_title )
+                return VLC_EGENERIC;
+
+          *pi_int = 1;
+          *ppp_title = malloc( sizeof( input_title_t*) );
+          (*ppp_title)[0] = vlc_input_title_Duplicate( p_sys->p_title );
+          *pi_title_offset = 0;
+          *pi_seekpoint_offset = 0;
+          return VLC_SUCCESS;
+        }
+
         case DEMUX_SET_TIME:
             /* FIXME TODO: implement a high precision seek (with mp3 parsing)
              * needed for multi-input */
