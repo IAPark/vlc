@@ -49,8 +49,6 @@ typedef struct {
 
 
 id3v2_header parse_header(stream_t *stream) {
-  stream_Seek(stream, 0);
-
   id3v2_header header;
   char identifier[4];
   identifier[3] = 0;
@@ -60,6 +58,7 @@ id3v2_header parse_header(stream_t *stream) {
 
   if (memcmp(identifier,"ID3", 3) != 0) {
     header.valid = 0; //false
+    printf("invalid header\n");
     return header;
   }
   unsigned char version[2];
@@ -70,6 +69,7 @@ id3v2_header parse_header(stream_t *stream) {
 
   unsigned char flags;
   stream_Read(stream, &flags, 1);
+  printf("flags %i\n", flags);
 
 
   unsigned char size[4];
@@ -90,12 +90,39 @@ id3v2_frame_header parse_frame_header(stream_t* stream) {
   stream_Read(stream, identifier, 4);
   strcpy(header.id, identifier);
 
-  char size[4];
-  stream_Read(stream, size, 4);
-  header.size = size[3] + size[2]*128 + size[1]*128*128 + size[0]*128*128;
+  unsigned char size[4];
+  if(stream_Read(stream, size, 4) != 4) {
+    printf("something went wrong\n");
+  }
+  bool standard_size = true;
+  for (int i=0; i<4; ++i) {
+    if (size[i] > 127) {
+      standard_size = false;
+      break;
+    }
+  }
+
+  header.size = 0;
+  if (standard_size) {
+    header.size = size[0]*128*128*128 + size[1]*128*128 + size[2]*128 + size[3];;
+  } else {
+    ((unsigned char*)&header.size)[3] = size[0];
+    ((unsigned char*)&header.size)[2] = size[1];
+    ((unsigned char*)&header.size)[1] = size[2];
+    ((unsigned char*)&header.size)[0] = size[3];
+  }
+
 
   unsigned char flags[2];
-  stream_Read(stream, flags, 2);
+  if(stream_Read(stream, flags, 2) != 2) {
+    printf("something went wrong\n");
+  }
+  if(header.size != 0||false) {
+    printf("Parsing header at %lu\n", header.start);
+    printf("Individual sizes %u,%u,%u,%u\n", size[3], size[2], size[1], size[0]);
+    printf("Parsed a %s frame with size %lu and flags %i,%i\n", identifier, header.size, flags[0], flags[1]);
+  }
+
   return header;
 }
 
@@ -105,7 +132,7 @@ int skip_frame(stream_t* stream, id3v2_frame_header frame) {
   return stream_Seek(stream, frame.size + frame.start + 10);
 }
 
-chapter_frame parse_chapter(FILE* stream) {
+chapter_frame parse_chapter(stream_t* stream) {
   chapter_frame frame;
   for(int i=0; i<20; ++i) {
     stream_Read(stream, (frame.id + i), 1);
@@ -136,7 +163,7 @@ void swap(char *a, char *b) {
   *b = temp;
 }
 
-chapter get_chapter(FILE* stream, id3v2_frame_header frame) {
+chapter get_chapter(stream_t* stream, id3v2_frame_header frame) {
   chapter chap;
   chapter_frame chap_frame = parse_chapter(stream);
   chap.start_time = chap_frame.start_time;
@@ -145,6 +172,7 @@ chapter get_chapter(FILE* stream, id3v2_frame_header frame) {
     char *title = malloc(frame.size);
     char type;
     stream_Read(stream, &type, 1);
+    printf("type= %i\n", type);
     for(int i=0; i<frame.size -1; i++) {
       stream_Read(stream, title + i, 1);
       if (title[i] == 0) {
@@ -160,21 +188,22 @@ chapter get_chapter(FILE* stream, id3v2_frame_header frame) {
 }
 
 
-chapters get_chapters(FILE* stream) {
+chapters get_chapters(stream_t* stream) {
   chapters chaps;
   chaps.size = 0;
   id3v2_header header = parse_header(stream);
-  printf("finding chapters at %lu \n", stream_Tell(stream));
+  printf("finding chapters in %lu \n", header.size);
   while (stream_Tell(stream) < header.size) {
     id3v2_frame_header frame_header = parse_frame_header(stream);
     if(skip_frame(stream, frame_header) < 0) {
+      printf("couldn't skip size was %lu and trying to go to %lu\n", header.size, frame_header.size + frame_header.start + 10);
       return chaps;
     }
     if (memcmp(frame_header.id, "CHAP", 4) == 0) {
       chaps.size += 1;
     }
   }
-  printf("found are chapters\n");
+  printf("found all chapters\n");
   stream_Seek(stream, 0);
   header = parse_header(stream);
   chaps.chapters = malloc (sizeof(chapter)*chaps.size);
