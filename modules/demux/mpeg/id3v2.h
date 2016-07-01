@@ -71,23 +71,62 @@ typedef struct {
   int size;
 } chapters;
 
-/*
-High level function to parse chapter information from id3v2 tag and create title info
-
-*/
+/**
+ * High level function to parse chapter information from id3v2 tag and create title info
+ */
 input_title_t* get_title(demux_t* p_demux);
 
-// returns the id3v2 header found
+/**
+ * Parses overall header for ID3v2
+ *
+ * Currently exists as a minimum inplimentation. No effort is made to
+ * parse flag information or respond to it according to spec
+ *
+ * @param stream a stream pointing to the start of the ID3V2 header
+ */
 id3v2_header parse_header(stream_t *stream);
 
+/**
+ * Parses header for ID3V2 frame
+ *
+ * Makes some attemt to detirmine if size is incoded to avoid false syncsignals
+ * as the standard requires, but may fail to properly decode if standard
+ * is not followed
+ *
+ * @param stream a stream pointing to the start of the frame header
+ */
 id3v2_frame_header parse_frame_header(stream_t* stream);
 
+/**
+ * Calls stream_Seek to bring it past the end of the frame
+ */
 int skip_frame(stream_t* stream, id3v2_frame_header frame);
 
+/**
+ * Parses a CHAP frame
+ *
+ * No attempt is made to read any text information frames that may or
+ * may not be embedded in this tag
+ *
+ * @param stream a stream pointing just after the hader for the CHAP frame
+ */
 chapter_frame parse_chapter(stream_t* stream);
 
+
+/**
+ * Parses a chapter frame into a high level structure for use
+ *
+ * It is assumed a TIT2 frame or similar is embedded containing the title
+ * of the chapter as is recomended by the spec
+ *
+ * @param stream a stream pointing just after the hader for the CHAP frame
+ */
 chapter get_chapter(stream_t* stream, id3v2_frame_header frame);
 
-
+/**
+ * Get all chapters in ID3V2 tag
+ *
+ * Chapters will be parsed and saved in the order they are found in 
+ */
 chapters get_chapters(stream_t* stream);
 #endif
