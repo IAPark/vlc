@@ -1,5 +1,5 @@
 /*****************************************************************************
- * mpeg4_iod.h: ISO 14496-1 IOD and parsers
+ * id3v2.h: ID3v2 Chapter Frame parser
  *****************************************************************************
  * Copyright (C) 2004-2015 VLC authors and VideoLAN
  *
@@ -71,7 +71,13 @@ typedef struct {
   int size;
 } chapters;
 
+/*
+High level function to parse chapter information from id3v2 tag and create title info
 
+*/
+input_title_t* get_title(demux_t* p_demux);
+
+// returns the id3v2 header found
 id3v2_header parse_header(stream_t *stream);
 
 id3v2_frame_header parse_frame_header(stream_t* stream);
@@ -84,7 +90,4 @@ chapter get_chapter(stream_t* stream, id3v2_frame_header frame);
 
 
 chapters get_chapters(stream_t* stream);
-
-input_title_t* get_title(demux_t* p_demux);
-
 #endif
