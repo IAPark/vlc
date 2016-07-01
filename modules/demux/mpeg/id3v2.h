@@ -42,14 +42,14 @@ typedef struct {
 typedef struct {
   id3v2_version version;
   id3v2_flags flags;
-  int size;
+  uint32_t size;
   char valid;
 } id3v2_header;
 
 typedef struct {
   char id[5];
-  unsigned long size;
-  unsigned long start;
+  uint32_t size;
+  uint32_t start;
 
 } id3v2_frame_header;
 
@@ -59,7 +59,7 @@ typedef struct {
   long end_time;
   long start_offset;
   long end_offset;
-} chapter_frame;
+} id3v2_chapter_frame;
 
 typedef struct {
   char *title;
@@ -110,7 +110,7 @@ int skip_frame(stream_t* stream, id3v2_frame_header frame);
  *
  * @param stream a stream pointing just after the hader for the CHAP frame
  */
-chapter_frame parse_chapter(stream_t* stream);
+id3v2_chapter_frame parse_chapter(stream_t* stream);
 
 
 /**
@@ -126,7 +126,7 @@ chapter get_chapter(stream_t* stream, id3v2_frame_header frame);
 /**
  * Get all chapters in ID3V2 tag
  *
- * Chapters will be parsed and saved in the order they are found in 
+ * Chapters will be parsed and saved in the order they are found in
  */
 chapters get_chapters(stream_t* stream);
 #endif

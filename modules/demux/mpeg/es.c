@@ -252,7 +252,6 @@ static int OpenCommon( demux_t *p_demux,
 static int OpenAudio( vlc_object_t *p_this )
 {
     demux_t *p_demux = (demux_t*)p_this;
-    demux_sys_t *p_sys = p_demux->p_sys;
 
     for( int i = 0; p_codecs[i].i_codec != 0; i++ )
     {
@@ -451,12 +450,9 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             if(i_seekpoint >= p_sys->p_title->i_seekpoint) {
               return VLC_EGENERIC;
             }
-            fflush(stdout);
-            printf("time =  %i\n", p_sys->p_title->seekpoint[i_seekpoint]->i_time_offset );
-            fflush(stdout);
+
             int64_t time = p_sys->p_title->seekpoint[i_seekpoint]->i_time_offset;
             int temp = demux_Control(p_demux, DEMUX_SET_TIME, time, true );
-            printf("got %i\n", temp);
             fflush(stdout);
 
             return temp;

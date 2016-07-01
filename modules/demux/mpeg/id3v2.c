@@ -94,8 +94,8 @@ int skip_frame(stream_t* stream, id3v2_frame_header frame) {
   return stream_Seek(stream, frame.size + frame.start + 10);
 }
 
-chapter_frame parse_chapter(stream_t* stream) {
-  chapter_frame frame;
+id3v2_chapter_frame parse_chapter(stream_t* stream) {
+  id3v2_chapter_frame frame;
   for(int i=0; i<20; ++i) {
     stream_Read(stream, (frame.id + i), 1);
 
@@ -119,15 +119,9 @@ chapter_frame parse_chapter(stream_t* stream) {
   return frame;
 }
 
-void swap(char *a, char *b) {
-  char temp = *a;
-  *a = *b;
-  *b = temp;
-}
-
 chapter get_chapter(stream_t* stream, id3v2_frame_header frame) {
   chapter chap;
-  chapter_frame chap_frame = parse_chapter(stream);
+  id3v2_chapter_frame chap_frame = parse_chapter(stream);
   chap.start_time = chap_frame.start_time;
   if (stream_Tell(stream) <= frame.start + frame.size + 10) {
     id3v2_frame_header frame = parse_frame_header(stream);
