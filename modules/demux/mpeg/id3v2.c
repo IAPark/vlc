@@ -19,9 +19,63 @@
  *****************************************************************************/
 #include "id3v2.h"
 
+input_title_t* get_title(demux_t* p_demux) {
+   input_title_t *title = vlc_input_title_New();
+   uint64_t start = stream_Tell(p_demux->s);
 
-id3v2_header parse_header(stream_t *stream) {
-  id3v2_header header;
+   stream_Seek(p_demux->s, 0);
+
+  chapters_t chaps = get_chapters(p_demux->s);
+
+  for(int i = 0; i < chaps.size; ++i) {
+    seekpoint_t *p_seekpoint = vlc_seekpoint_New();
+    p_seekpoint->i_time_offset = chaps.chapters[i].start_time * 1000;
+    p_seekpoint->psz_name = chaps.chapters[i].title; // releasing responsibality for closing
+    TAB_APPEND( title->i_seekpoint, title->seekpoint, p_seekpoint );
+  }
+  stream_Seek(p_demux->s, start);
+  p_demux->info.i_update |= INPUT_UPDATE_TITLE_LIST;
+  return title;
+}
+
+chapters_t get_chapters(stream_t* stream) {
+  printf("getting titles\n");
+  chapters_t chaps;
+
+  chaps.size = 0;
+
+  id3v2_header_t header = parse_header(stream);
+  while (stream_Tell(stream) < header.size) {
+    id3v2_frame_header_t frame_header = parse_frame_header(stream);
+    if(skip_frame(stream, frame_header) < 0) {
+      printf("couldn't skip size was %u and trying to go to %u\n", header.size, frame_header.size + frame_header.start + 10);
+      return chaps;
+    }
+    if (memcmp(frame_header.id, "CHAP", 4) == 0) {
+      chaps.size += 1;
+    }
+  }
+  if(stream_Seek(stream, 0) < 0) {
+    printf("couldn't seek to the start of the file\n");
+  }
+  header = parse_header(stream);
+  chaps.chapters = malloc (sizeof(chapter_t)*chaps.size);
+
+  int i = 0;
+  while (stream_Tell(stream) < header.size) {
+    id3v2_frame_header_t frame_header = parse_frame_header(stream);
+    if (memcmp(frame_header.id, "CHAP", 4) == 0) {
+      chaps.chapters[i] = get_chapter(stream, frame_header);
+      i++;
+    }
+    skip_frame(stream, frame_header);
+  }
+  return chaps;
+}
+
+
+id3v2_header_t parse_header(stream_t *stream) {
+  id3v2_header_t header;
   char identifier[4];
   identifier[3] = 0;
 
@@ -50,8 +104,8 @@ id3v2_header parse_header(stream_t *stream) {
 }
 
 
-id3v2_frame_header parse_frame_header(stream_t* stream) {
-  id3v2_frame_header header;
+id3v2_frame_header_t parse_frame_header(stream_t* stream) {
+  id3v2_frame_header_t header;
   header.start = stream_Tell(stream);
 
   char identifier[5];
@@ -90,12 +144,12 @@ id3v2_frame_header parse_frame_header(stream_t* stream) {
   return header;
 }
 
-int skip_frame(stream_t* stream, id3v2_frame_header frame) {
+int skip_frame(stream_t* stream, id3v2_frame_header_t frame) {
   return stream_Seek(stream, frame.size + frame.start + 10);
 }
 
-id3v2_chapter_frame parse_chapter(stream_t* stream) {
-  id3v2_chapter_frame frame;
+id3v2_chapter_frame_t parse_chapter(stream_t* stream) {
+  id3v2_chapter_frame_t frame;
   for(int i=0; i<20; ++i) {
     stream_Read(stream, (frame.id + i), 1);
 
@@ -119,15 +173,15 @@ id3v2_chapter_frame parse_chapter(stream_t* stream) {
   return frame;
 }
 
-chapter get_chapter(stream_t* stream, id3v2_frame_header frame) {
-  chapter chap;
-  id3v2_chapter_frame chap_frame = parse_chapter(stream);
+chapter_t get_chapter(stream_t* stream, id3v2_frame_header_t frame) {
+  chapter_t chap;
+  id3v2_chapter_frame_t chap_frame = parse_chapter(stream);
   chap.start_time = chap_frame.start_time;
   if (stream_Tell(stream) <= frame.start + frame.size + 10) {
-    id3v2_frame_header frame = parse_frame_header(stream);
+    id3v2_frame_header_t frame = parse_frame_header(stream);
     char type;
     stream_Read(stream, &type, 1);
-    unsigned char *title = malloc(frame.size);
+    char *title = malloc(frame.size);
     if(stream_Read(stream, title, frame.size) < frame.size) {
       printf("something went wrong" );
     };
@@ -137,8 +191,8 @@ chapter get_chapter(stream_t* stream, id3v2_frame_header frame) {
       size_t srclen = frame.size;
       size_t dstlen = frame.size;
       chap.title = malloc(dstlen);
-      char * pIn = title;
-      char * pOut = ( char*)chap.title;
+      const char * pIn = (char*) title;
+      char * pOut = (char*) chap.title;
       vlc_iconv(cd, &pIn, &srclen, &pOut, &dstlen);
       chap.title[frame.size-dstlen] = 0;
       vlc_iconv_close(cd);
@@ -154,36 +208,4 @@ chapter get_chapter(stream_t* stream, id3v2_frame_header frame) {
     chap.title = 0;
   }
   return chap;
-}
-
-
-chapters get_chapters(stream_t* stream) {
-  printf("getting titles\n");
-  chapters chaps;
-  chaps.size = 0;
-  id3v2_header header = parse_header(stream);
-  while (stream_Tell(stream) < header.size) {
-    id3v2_frame_header frame_header = parse_frame_header(stream);
-    if(skip_frame(stream, frame_header) < 0) {
-      printf("couldn't skip size was %lu and trying to go to %lu\n", header.size, frame_header.size + frame_header.start + 10);
-      return chaps;
-    }
-    if (memcmp(frame_header.id, "CHAP", 4) == 0) {
-      chaps.size += 1;
-    }
-  }
-  stream_Seek(stream, 0);
-  header = parse_header(stream);
-  chaps.chapters = malloc (sizeof(chapter)*chaps.size);
-
-  int i = 0;
-  while (stream_Tell(stream) < header.size) {
-    id3v2_frame_header frame_header = parse_frame_header(stream);
-    if (memcmp(frame_header.id, "CHAP", 4) == 0) {
-      chaps.chapters[i] = get_chapter(stream, frame_header);
-      i++;
-    }
-    skip_frame(stream, frame_header);
-  }
-  return chaps;
 }

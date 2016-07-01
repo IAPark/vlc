@@ -31,27 +31,27 @@
 typedef struct {
   unsigned char major;
   unsigned char minor;
-} id3v2_version;
+} id3v2_version_t;
 
 typedef struct {
   char unsynchronisation;
   char extended_header;
   char experimental;
-} id3v2_flags;
+} id3v2_flags_t;
 
 typedef struct {
-  id3v2_version version;
-  id3v2_flags flags;
+  id3v2_version_t version;
+  id3v2_flags_t flags;
   uint32_t size;
   char valid;
-} id3v2_header;
+} id3v2_header_t;
 
 typedef struct {
   char id[5];
   uint32_t size;
   uint32_t start;
 
-} id3v2_frame_header;
+} id3v2_frame_header_t;
 
 typedef struct {
   char id[20];
@@ -59,17 +59,17 @@ typedef struct {
   long end_time;
   long start_offset;
   long end_offset;
-} id3v2_chapter_frame;
+} id3v2_chapter_frame_t;
 
 typedef struct {
   char *title;
   long start_time;
-} chapter;
+} chapter_t;
 
 typedef struct {
-  chapter *chapters;
+  chapter_t *chapters;
   int size;
-} chapters;
+} chapters_t;
 
 /**
  * High level function to parse chapter information from id3v2 tag and create title info
@@ -84,7 +84,7 @@ input_title_t* get_title(demux_t* p_demux);
  *
  * @param stream a stream pointing to the start of the ID3V2 header
  */
-id3v2_header parse_header(stream_t *stream);
+id3v2_header_t parse_header(stream_t *stream);
 
 /**
  * Parses header for ID3V2 frame
@@ -95,12 +95,12 @@ id3v2_header parse_header(stream_t *stream);
  *
  * @param stream a stream pointing to the start of the frame header
  */
-id3v2_frame_header parse_frame_header(stream_t* stream);
+id3v2_frame_header_t parse_frame_header(stream_t* stream);
 
 /**
  * Calls stream_Seek to bring it past the end of the frame
  */
-int skip_frame(stream_t* stream, id3v2_frame_header frame);
+int skip_frame(stream_t* stream, id3v2_frame_header_t frame);
 
 /**
  * Parses a CHAP frame
@@ -110,7 +110,7 @@ int skip_frame(stream_t* stream, id3v2_frame_header frame);
  *
  * @param stream a stream pointing just after the hader for the CHAP frame
  */
-id3v2_chapter_frame parse_chapter(stream_t* stream);
+id3v2_chapter_frame_t parse_chapter(stream_t* stream);
 
 
 /**
@@ -121,12 +121,12 @@ id3v2_chapter_frame parse_chapter(stream_t* stream);
  *
  * @param stream a stream pointing just after the hader for the CHAP frame
  */
-chapter get_chapter(stream_t* stream, id3v2_frame_header frame);
+chapter_t get_chapter(stream_t* stream, id3v2_frame_header_t frame);
 
 /**
  * Get all chapters in ID3V2 tag
  *
  * Chapters will be parsed and saved in the order they are found in
  */
-chapters get_chapters(stream_t* stream);
+chapters_t get_chapters(stream_t* stream);
 #endif
