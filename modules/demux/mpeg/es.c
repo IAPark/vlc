@@ -182,7 +182,6 @@ static int OpenCommon( demux_t *p_demux,
                        int i_cat, const codec_t *p_codec, int64_t i_bs_offset )
 {
     demux_sys_t *p_sys;
-
     es_format_t fmt;
 
     DEMUX_INIT_COMMON(); p_sys = p_demux->p_sys;
@@ -350,6 +349,9 @@ static void Close( vlc_object_t * p_this )
 {
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys = p_demux->p_sys;
+
+    if( p_sys->p_title )
+        vlc_input_title_Delete( p_sys->p_title );
 
     if( p_sys->p_packetized_data )
         block_ChainRelease( p_sys->p_packetized_data );
