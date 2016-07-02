@@ -82,9 +82,9 @@ input_title_t* get_title(demux_t* p_demux);
  * Currently exists as a minimum inplimentation. No effort is made to
  * parse flag information or respond to it according to spec
  *
- * @param stream a stream pointing to the start of the ID3V2 header
+ * @param p_stream a stream pointing to the start of the ID3V2 header
  */
-id3v2_header_t parse_header(stream_t *stream);
+id3v2_header_t parse_header(stream_t *p_stream);
 
 /**
  * Parses header for ID3V2 frame
@@ -93,14 +93,14 @@ id3v2_header_t parse_header(stream_t *stream);
  * as the standard requires, but may fail to properly decode if standard
  * is not followed
  *
- * @param stream a stream pointing to the start of the frame header
+ * @param p_stream a stream pointing to the start of the frame header
  */
-id3v2_frame_header_t parse_frame_header(stream_t* stream);
+id3v2_frame_header_t parse_frame_header(stream_t* p_stream, id3v2_header_t id3v2_header);
 
 /**
  * Calls stream_Seek to bring it past the end of the frame
  */
-int skip_frame(stream_t* stream, id3v2_frame_header_t frame);
+int skip_frame(stream_t* stream, id3v2_frame_header_t p_stream);
 
 /**
  * Parses a CHAP frame
@@ -108,9 +108,9 @@ int skip_frame(stream_t* stream, id3v2_frame_header_t frame);
  * No attempt is made to read any text information frames that may or
  * may not be embedded in this tag
  *
- * @param stream a stream pointing just after the hader for the CHAP frame
+ * @param p_stream a stream pointing just after the hader for the CHAP frame
  */
-id3v2_chapter_frame_t parse_chapter(stream_t* stream);
+id3v2_chapter_frame_t parse_chapter(stream_t* p_stream);
 
 
 /**
@@ -119,14 +119,14 @@ id3v2_chapter_frame_t parse_chapter(stream_t* stream);
  * It is assumed a TIT2 frame or similar is embedded containing the title
  * of the chapter as is recomended by the spec
  *
- * @param stream a stream pointing just after the hader for the CHAP frame
+ * @param p_stream a stream pointing just after the hader for the CHAP frame
  */
-chapter_t get_chapter(stream_t* stream, id3v2_frame_header_t frame);
+chapter_t get_chapter(stream_t* p_stream, id3v2_frame_header_t frame, id3v2_header_t header);
 
 /**
  * Get all chapters in ID3V2 tag
  *
  * Chapters will be parsed and saved in the order they are found in
  */
-chapters_t get_chapters(stream_t* stream);
+chapters_t get_chapters(stream_t* p_stream);
 #endif

@@ -68,11 +68,14 @@ chapters_t get_chapters(stream_t* p_stream) {
 
   // counting all the chapters, todo perform parse in one go
   while (stream_Tell(p_stream) < header.i_size) {
-    id3v2_frame_header_t frame_header = parse_frame_header(p_stream);
+    id3v2_frame_header_t frame_header = parse_frame_header(p_stream, header);
     if(skip_frame(p_stream, frame_header) < 0) {
       printf("couldn't skip size was %u and trying to go to %u\n", header.i_size,
        frame_header.i_size + frame_header.i_start + 10);
-      return chapters;
+       break;
+    }
+    if (frame_header.p_id[0] == 0) {
+      break;
     }
     if (memcmp(frame_header.p_id, "CHAP", 4) == 0) {
       chapters.i_size += 1;
@@ -87,12 +90,15 @@ chapters_t get_chapters(stream_t* p_stream) {
 
   int i = 0;
   while (stream_Tell(p_stream) < header.i_size) {
-    id3v2_frame_header_t frame_header = parse_frame_header(p_stream);
+    id3v2_frame_header_t frame_header = parse_frame_header(p_stream, header);
     if (memcmp(frame_header.p_id, "CHAP", 4) == 0) {
-      chapters.p_chapters[i] = get_chapter(p_stream, frame_header);
+      chapters.p_chapters[i] = get_chapter(p_stream, frame_header, header);
       i++;
     }
     skip_frame(p_stream, frame_header);
+    if (frame_header.p_id[0] == 0) {
+      break;
+    }
   }
   return chapters;
 }
@@ -123,14 +129,17 @@ id3v2_header_t parse_header(stream_t *p_stream) {
 
   header.version.i_major = p_version[0];
   header.version.i_minor = p_version[1];
+  printf("%u.%u\n", header.version.i_major, header.version.i_minor);
 
-  // todo parse chapter information
   unsigned char i_flags;
   if (stream_Read(p_stream, &i_flags, 1) < 1) {
     printf("coudln't read flags");
     header.b_valid = false;
     return header;
   }
+  header.flags.b_unsynchronisation = (0b10000000 & i_flags) != 0;
+  header.flags.b_extended_header = (0b01000000 & i_flags) != 0;
+  header.flags.b_experimental = (0b00100000 & i_flags) != 0;
 
 
   unsigned char p_size[4];
@@ -142,6 +151,13 @@ id3v2_header_t parse_header(stream_t *p_stream) {
 
   header.i_size = p_size[0]*128*128*128 + p_size[1]*128*128 + p_size[2]*128 + p_size[3];
   header.b_valid = true;
+
+  if (header.flags.b_extended_header) {
+    if (stream_Seek(p_stream, stream_Tell(p_stream) + 10) < 10) {
+      printf("Couldn't skip exteneded header\n");
+    }
+  }
+
   return header;
 }
 
@@ -157,7 +173,7 @@ static void read_int32(uint32_t* p_out, unsigned char *p_in) {
   #endif
 }
 
-id3v2_frame_header_t parse_frame_header(stream_t* p_stream) {
+id3v2_frame_header_t parse_frame_header(stream_t* p_stream, id3v2_header_t id3v2_header) {
   id3v2_frame_header_t header;
   // consider making start the start of the body of the frame
   header.i_start = stream_Tell(p_stream);
@@ -241,25 +257,25 @@ id3v2_chapter_frame_t parse_chapter(stream_t* p_stream) {
 }
 
 
-chapter_t get_chapter(stream_t* p_stream, id3v2_frame_header_t frame) {
+chapter_t get_chapter(stream_t* p_stream, id3v2_frame_header_t frame, id3v2_header_t header) {
   chapter_t chapter;
   id3v2_chapter_frame_t chapter_frame = parse_chapter(p_stream);
   chapter.i_start_time = chapter_frame.i_start_time;
   if (stream_Tell(p_stream) <= frame.i_start + frame.i_size + 10) {
-    id3v2_frame_header_t frame = parse_frame_header(p_stream);
+    id3v2_frame_header_t text_frame = parse_frame_header(p_stream, header);
 
     char i_type = -1;
     if (stream_Read(p_stream, &i_type, 1) < 1) {
       printf("couldn't read type");
     }
 
-    char *psz_title = malloc(frame.i_size);
-    if (stream_Read(p_stream, psz_title, frame.i_size) < frame.i_size) {
+    char *psz_title = malloc(text_frame.i_size);
+    if (stream_Read(p_stream, psz_title, text_frame.i_size) < text_frame.i_size) {
       printf("something went wrong" );
     };
     if (i_type == 1) {
-      size_t i_in_len = frame.i_size;
-      size_t i_out_len = frame.i_size;
+      size_t i_in_len = text_frame.i_size;
+      size_t i_out_len = text_frame.i_size;
       chapter.psz_title = malloc(i_out_len);
 
       const char* p_in = (char*) psz_title;
@@ -271,7 +287,7 @@ chapter_t get_chapter(stream_t* p_stream, id3v2_frame_header_t frame) {
       }
       vlc_iconv_close(handle);
 
-      chapter.psz_title[frame.i_size-i_out_len] = 0;
+      chapter.psz_title[text_frame.i_size-i_out_len] = 0;
       free(psz_title);
     } else if (i_type==0) {
       chapter.psz_title = psz_title;
