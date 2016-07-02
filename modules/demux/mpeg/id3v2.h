@@ -29,46 +29,46 @@
 #include <vlc_charset.h>
 
 typedef struct {
-  unsigned char major;
-  unsigned char minor;
+  unsigned char i_major;
+  unsigned char i_minor;
 } id3v2_version_t;
 
 typedef struct {
-  char unsynchronisation;
-  char extended_header;
-  char experimental;
+  bool b_unsynchronisation;
+  bool b_extended_header;
+  bool b_experimental;
 } id3v2_flags_t;
 
 typedef struct {
   id3v2_version_t version;
   id3v2_flags_t flags;
-  uint32_t size;
-  char valid;
+  uint32_t i_size;
+  bool b_valid;
 } id3v2_header_t;
 
 typedef struct {
-  char id[5];
-  uint32_t size;
-  uint32_t start;
+  char p_id[4];
+  uint32_t i_size;
+  uint32_t i_start;
 
 } id3v2_frame_header_t;
 
 typedef struct {
-  char id[20];
-  long start_time;
-  long end_time;
-  long start_offset;
-  long end_offset;
+  char psz_id[20];
+  long i_start_time;
+  long i_end_time;
+  long i_start_offset;
+  long i_end_offset;
 } id3v2_chapter_frame_t;
 
 typedef struct {
-  char *title;
-  long start_time;
+  char *psz_title;
+  long i_start_time;
 } chapter_t;
 
 typedef struct {
-  chapter_t *chapters;
-  int size;
+  chapter_t *p_chapters;
+  int i_size;
 } chapters_t;
 
 /**
