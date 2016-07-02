@@ -55,10 +55,10 @@ typedef struct {
 
 typedef struct {
   char psz_id[20];
-  long i_start_time;
-  long i_end_time;
-  long i_start_offset;
-  long i_end_offset;
+  uint32_t i_start_time;
+  uint32_t i_end_time;
+  uint32_t i_start_offset;
+  uint32_t i_end_offset;
 } id3v2_chapter_frame_t;
 
 typedef struct {

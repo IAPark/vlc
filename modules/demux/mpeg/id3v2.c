@@ -145,6 +145,17 @@ id3v2_header_t parse_header(stream_t *p_stream) {
   return header;
 }
 
+static void read_int32(uint32_t* p_out, unsigned char *p_in) {
+  #ifdef WORDS_BIGENDIAN
+    for (int i=0; i<4; ++i) {
+      ((unsigned char*)p_out)[i] = p_in[i];
+    }
+  #else
+    for (int i=0; i<4; ++i) {
+      ((unsigned char*)p_out)[3-i] = p_in[i];
+    }
+  #endif
+}
 
 id3v2_frame_header_t parse_frame_header(stream_t* p_stream) {
   id3v2_frame_header_t header;
@@ -175,10 +186,7 @@ id3v2_frame_header_t parse_frame_header(stream_t* p_stream) {
   if (p_standard_size) {
     header.i_size = p_size[0]*128*128*128 + p_size[1]*128*128 + p_size[2]*128 + p_size[3];
   } else {
-    ((unsigned char*)&header.i_size)[3] = p_size[0];
-    ((unsigned char*)&header.i_size)[2] = p_size[1];
-    ((unsigned char*)&header.i_size)[1] = p_size[2];
-    ((unsigned char*)&header.i_size)[0] = p_size[3];
+    read_int32(&header.i_size, p_size);
   }
 
 
@@ -193,7 +201,6 @@ id3v2_frame_header_t parse_frame_header(stream_t* p_stream) {
 int skip_frame(stream_t* p_stream, id3v2_frame_header_t frame) {
   return stream_Seek(p_stream, frame.i_size + frame.i_start + 10);
 }
-
 
 id3v2_chapter_frame_t parse_chapter(stream_t* p_stream) {
   id3v2_chapter_frame_t frame;
@@ -213,26 +220,23 @@ id3v2_chapter_frame_t parse_chapter(stream_t* p_stream) {
   if (stream_Read(p_stream, p_time, 4) < 4) {
     printf("couldn't read time\n");
   }
-  frame.i_start_time =  p_time[3] + p_time[2]*128*2 +
-                        p_time[1]*128*128*4 + p_time[0]*128*128*8;
+  read_int32(&(frame.i_start_time) , p_time);
 
   if (stream_Read(p_stream, p_time, 4) < 4) {
     printf("couldn't read time\n");
   }
-  frame.i_end_time = p_time[3] + p_time[2]*128*2 +
-                     p_time[1]*128*128*4 + p_time[0]*128*128*8;
+  read_int32(&(frame.i_end_time) , p_time);
 
   if (stream_Read(p_stream, p_time, 4) < 4) {
     printf("couldn't read time\n");
   }
-  frame.i_start_offset = p_time[3] + p_time[2]*128*2 +
-                         p_time[1]*128*128*4 + p_time[0]*128*128*8;
+  read_int32(&(frame.i_start_offset) , p_time);
 
   if (stream_Read(p_stream, p_time, 4) < 4) {
     printf("couldn't read time\n");
   }
-  frame.i_end_offset = p_time[3] + p_time[2]*128*2 +
-                       p_time[1]*128*128*4 + p_time[0]*128*128*8;
+  read_int32(&(frame.i_end_offset) , p_time);
+
   return frame;
 }
 
