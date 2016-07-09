@@ -39,6 +39,7 @@
 
 #include "../../codec/a52.h"
 #include "../../codec/dts_header.h"
+#include "id3v2.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -102,7 +103,7 @@ typedef struct
 struct demux_sys_t
 {
     codec_t codec;
-
+    input_title_t *p_title;
     es_out_id_t *p_es;
 
     bool  b_start;
@@ -348,6 +349,9 @@ static void Close( vlc_object_t * p_this )
     demux_t     *p_demux = (demux_t*)p_this;
     demux_sys_t *p_sys = p_demux->p_sys;
 
+    if( p_sys->p_title )
+        vlc_input_title_Delete( p_sys->p_title );
+
     if( p_sys->p_packetized_data )
         block_ChainRelease( p_sys->p_packetized_data );
     demux_PacketizerDestroy( p_sys->p_packetizer );
@@ -406,6 +410,49 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             return i_ret;
         }
 
+        case DEMUX_GET_TITLE_INFO:
+        {
+          input_title_t ***ppp_title = (input_title_t***)va_arg( args, input_title_t*** );
+          int *pi_int    = (int*)va_arg( args, int* );
+          int *pi_title_offset = (int*)va_arg( args, int* );
+          int *pi_seekpoint_offset = (int*)va_arg( args, int* );
+
+          if( !p_sys->p_title )
+                return VLC_EGENERIC;
+
+          *pi_int = 1;
+          *ppp_title = malloc( sizeof( input_title_t*) );
+          (*ppp_title)[0] = vlc_input_title_Duplicate( p_sys->p_title );
+          *pi_title_offset = 0;
+          *pi_seekpoint_offset = 0;
+          return VLC_SUCCESS;
+        }
+
+        case DEMUX_SET_TITLE:
+        {
+            const int i_title = (int)va_arg( args, int );
+            if( !p_sys->p_title || i_title != 0 )
+                return VLC_EGENERIC;
+            return VLC_SUCCESS;
+        }
+
+        case DEMUX_SET_SEEKPOINT:
+        {
+            const int i_seekpoint = (int)va_arg( args, int );
+            if( !p_sys->p_title )
+                return VLC_EGENERIC;
+            if(i_seekpoint >= p_sys->p_title->i_seekpoint) {
+              return VLC_EGENERIC;
+            }
+
+            int64_t time = p_sys->p_title->seekpoint[i_seekpoint]->i_time_offset;
+            int temp = demux_Control(p_demux, DEMUX_SET_TIME, time, true );
+            fflush(stdout);
+
+            return temp;
+        }
+
+        case DEMUX_SET_POSITION:
         case DEMUX_SET_TIME:
             /* FIXME TODO: implement a high precision seek (with mp3 parsing)
              * needed for multi-input */
@@ -817,7 +864,7 @@ static double MpgaXingLameConvertPeak( uint32_t x )
 static int MpgaInit( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
-
+    p_sys->p_title = get_title(p_demux);
     const uint8_t *p_peek;
     int i_peek;
 

@@ -160,7 +160,7 @@ demux_LTLIBRARIES += libavformat_plugin.la
 endif
 endif
 
-libes_plugin_la_SOURCES  = demux/mpeg/es.c codec/dts_header.c codec/dts_header.h
+libes_plugin_la_SOURCES  = demux/mpeg/es.c demux/mpeg/id3v2.c codec/dts_header.c codec/dts_header.h
 demux_LTLIBRARIES += libes_plugin.la
 
 libh26x_plugin_la_SOURCES = demux/mpeg/h26x.c \
@@ -452,4 +452,3 @@ demux_LTLIBRARIES += libadaptive_plugin.la
 
 libttml_plugin_la_SOURCES = demux/ttml.c
 demux_LTLIBRARIES += libttml_plugin.la
-
