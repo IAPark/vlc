@@ -60,6 +60,11 @@ static id3v2_header_t parse_header(stream_t *p_stream) {
   header.flags.b_extended_header = (0b01000000 & i_flags) != 0;
   header.flags.b_experimental = (0b00100000 & i_flags) != 0;
 
+  if (header.flags.b_unsynchronisation) {
+    fprintf(stderr, "Can't handle unsynchronisation");
+    header.b_valid = false;
+    return header;
+  }
 
   unsigned char p_size[4];
   if (stream_Read(p_stream, p_size, 4) < 4) {
