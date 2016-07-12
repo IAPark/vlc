@@ -50,6 +50,7 @@ typedef struct {
   char p_id[4];
   uint32_t i_size;
   uint32_t i_start;
+  bool b_unsynced;
 
 } id3v2_frame_header_t;
 

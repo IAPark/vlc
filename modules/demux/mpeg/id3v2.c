@@ -63,7 +63,7 @@ static id3v2_header_t parse_header(stream_t *p_stream) {
   if (header.flags.b_unsynchronisation) {
     fprintf(stderr, "Can't handle unsynchronisation");
     header.b_valid = false;
-    return header;
+    //return header;
   }
 
   unsigned char p_size[4];
@@ -97,13 +97,58 @@ static void read_int32(uint32_t* p_out, unsigned char *p_in) {
   #endif
 }
 
-static id3v2_frame_header_t parse_frame_header(stream_t* p_stream, id3v2_header_t id3v2_header) {
+// read to buffer and search for and replace 0xFF, 0x00 with 0x, 0x00
+static ssize_t id3v2_stream_Read(stream_t * p_stream,
+                                 void *p_data,
+                                 size_t i_size,
+                                 bool b_unsynchronisation){
+  uint8_t *p_out = (uint8_t*)p_data;
+  size_t i_out = 0;
+  uint8_t excaped_sync[] = {0xFF, 0x00};
+  for (size_t i=0; i<i_size; ++i) {
+    if (stream_Read(p_stream, p_out + i_out, 1)<1) {
+      return -1;
+    }
+    i_out += 1;
+
+    if (b_unsynchronisation) {
+      // we won't advance if we just wrote the second part of an excaped sync byte
+      if (i == 0 && p_out[0] == 0) {
+        if (stream_Seek(p_stream, stream_Tell(p_stream) - 2) < 0) {
+          return -1;
+        }
+        uint8_t i_temp = 0;
+        if (stream_Read(p_stream, &i_temp, 1) < 1) {
+          return -1;
+        }
+        if (i_temp == 0xFF) {
+          i_out -= 1;
+          i -= 1;
+          printf("de-escaped a sync byte\n");
+        }
+        if (stream_Seek(p_stream, stream_Tell(p_stream) + 1) < 0) {
+          return -1;
+        }
+      } else if (memcmp(p_out + i_out-1, excaped_sync, 2) == 0) {
+        i_out -= 1;
+        i -= 1;
+        printf("de-escaped a sync byte\n");
+      }
+    }
+  }
+  return i_size;
+}
+
+static id3v2_frame_header_t parse_frame_header(stream_t* p_stream,
+                                               id3v2_header_t id3v2_header) {
   id3v2_frame_header_t header;
   // consider making start the start of the body of the frame
   header.i_start = stream_Tell(p_stream);
 
+  bool b_unsynchronisation = id3v2_header.version.i_major != 4 &&
+                             id3v2_header.flags.b_unsynchronisation;
 
-  if (stream_Read(p_stream, header.p_id, 4) < 4) {
+  if (id3v2_stream_Read(p_stream, header.p_id, 4, b_unsynchronisation) < 0) {
     fprintf(stderr, "failed to read frame id\n");
     header.i_size = 0;
     header.p_id[0] = 0;
@@ -111,7 +156,7 @@ static id3v2_frame_header_t parse_frame_header(stream_t* p_stream, id3v2_header_
   }
 
   unsigned char p_size[4];
-  if (stream_Read(p_stream, p_size, 4) != 4) {
+  if (id3v2_stream_Read(p_stream, p_size, 4, b_unsynchronisation) < 0) {
     fprintf(stderr, "something went wrong\n");
   }
   if (id3v2_header.version.i_major == 4) {
@@ -122,9 +167,13 @@ static id3v2_frame_header_t parse_frame_header(stream_t* p_stream, id3v2_header_
 
 
   unsigned char p_flags[2];
-  if(stream_Read(p_stream, p_flags, 2) != 2) {
+  if(id3v2_stream_Read(p_stream, p_flags, 2, b_unsynchronisation) < 0) {
     fprintf(stderr, "something went wrong\n");
   }
+
+  header.b_unsynced = b_unsynchronisation ||
+                      (id3v2_header.version.i_major == 4 &&
+                      (p_flags[1]&0b00000010) != 0);
   return header;
 }
 
@@ -220,7 +269,7 @@ static int parse_chapter(stream_t* p_stream,
   // skip id: we don't need that thing
   char i_out;
   do {
-    if (stream_Read(p_stream, &i_out, 1) < 1) {
+    if (id3v2_stream_Read(p_stream, &i_out, 1, frame_header.b_unsynced) < 0) {
       fprintf(stderr, "coudln't read char\n");
       break;
     }
@@ -228,7 +277,7 @@ static int parse_chapter(stream_t* p_stream,
 
   // Read the start time, there's also and end time and byte offsets, but we won't read it
   unsigned char p_time[4];
-  if (stream_Read(p_stream, p_time, 4) < 4) {
+  if (id3v2_stream_Read(p_stream, p_time, 4, frame_header.b_unsynced) < 0) {
     fprintf(stderr, "couldn't read time\n");
   }
   read_int32(&(chapter->i_start_time), p_time);
@@ -247,13 +296,13 @@ static int parse_chapter(stream_t* p_stream,
   id3v2_frame_header_t title_header = parse_frame_header(p_stream, header);
 
   uint8_t text_type;
-  if (stream_Read(p_stream, &text_type, 1) < 1) {
+  if (id3v2_stream_Read(p_stream, &text_type, 1, frame_header.b_unsynced) < 0) {
     fprintf(stderr, "coudln't read char\n");
     return 0;
   }
 
   char* psz_title = malloc(title_header.i_size + 1);
-  if (stream_Read(p_stream, psz_title, title_header.i_size-1) < title_header.i_size - 1) {
+  if (id3v2_stream_Read(p_stream, psz_title, title_header.i_size-1, frame_header.b_unsynced) < 0) {
     fprintf(stderr, "coudln't read char\n");
     return 0;
   }
