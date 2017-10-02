@@ -119,6 +119,12 @@ typedef struct
     sync_table_ctx_t current;
 } sync_table_t;
 
+typedef struct
+{
+    uint32_t i_byte_start;
+    seekpoint_t s_seekpoint;
+} id_seekpoint_t
+
 struct demux_sys_t
 {
     codec_t codec;
@@ -143,6 +149,11 @@ struct demux_sys_t
     int i_packet_size;
 
     int64_t i_stream_offset;
+
+    int i_seekpoints;
+    seekpoint_t **pp_seekpoints;
+    u_int32_t *p_seekpoint_bytes;
+
 
     float   f_fps;
 
@@ -376,6 +387,13 @@ static void Close( vlc_object_t * p_this )
     if( p_sys->mllt.p_bits )
         free( p_sys->mllt.p_bits );
     demux_PacketizerDestroy( p_sys->p_packetizer );
+    for( int i = 0; i < p_sys->i_seekpoints; i++ )
+    {
+        vlc_seekpoint_Delete( p_sys->pp_seekpoints[i] );
+    }
+    if( p_sys->i_seekpoints > 0)
+        free ( p_sys->pp_seekpoints );
+    
     free( p_sys );
 }
 
@@ -429,6 +447,42 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
                 return VLC_SUCCESS;
             }
             return i_ret;
+        }
+        
+
+        case DEMUX_GET_TITLE_INFO:
+        {
+
+            input_title_t ***ppp_title = va_arg( args, input_title_t *** );
+            int *pi_int = va_arg( args, int* );
+            int *pi_title_offset = va_arg( args, int* );
+            int *pi_seekpoint_offset = va_arg( args, int* );
+
+            if( p_sys->i_seekpoints > 0 )
+            {
+                *pi_int = 1;
+                *ppp_title = malloc( sizeof( input_title_t* ) );
+                input_title_t *p_title = (*ppp_title)[0] = vlc_input_title_New();
+                for( int i = 0; i < p_sys->i_seekpoints; i++ )
+                {
+                    seekpoint_t *p_seekpoint_copy = vlc_seekpoint_Duplicate( p_sys->pp_seekpoints[i] );
+                    if ( likely( p_seekpoint_copy ) )
+                        TAB_APPEND( p_title->i_seekpoint, p_title->seekpoint, p_seekpoint_copy );
+                }
+                *pi_title_offset = 0;
+                *pi_seekpoint_offset = 0;
+            }
+            return VLC_SUCCESS;
+        }
+
+        case DEMUX_SET_TITLE:
+        {
+            const int i_title = (int)va_arg( args, int );
+            return VLC_SUCCESS;
+        }
+        case DEMUX_SET_SEEKPOINT:
+        {
+            return VLC_SUCCESS;
         }
 
         case DEMUX_SET_TIME:
@@ -948,6 +1002,32 @@ static int ID3TAG_Parse_Handler( uint32_t i_tag, const uint8_t *p_payload, size_
             vlc_meta_Delete( p_meta );
         }
     }
+    else if( i_tag == VLC_FOURCC('C', 'H', 'A', 'P') )
+    {
+        int i_idLength = 0;
+        for(; p_payload[i_idLength] != 0; i_idLength++) {}
+        i_idLength+=1;
+
+        seekpoint_t *p_seekpoint = vlc_seekpoint_New();
+        p_seekpoint->i_time_offset = (u_int32_t)GetDWBE(p_payload+i_idLength+1);
+        u_int32_t byte_start = (u_int32_t)GetDWBE(p_payload+i_idLength+1+8);
+
+        int i_chapLength = i_idLength+4*4;
+        if (i_payload > i_chapLength && memcmp(p_payload+i_chapLength, "TIT2", 4) == 0) 
+        {
+            int i_dataStart = i_chapLength + 10;
+            int i_buf = ID3TAG_ReadSize(p_payload+i_chapLength+4, true);
+            char *p_alloc;
+            p_seekpoint->psz_name = ID3TextConvert(p_payload+i_dataStart, i_buf, &p_alloc );
+        }
+        else
+        {
+            p_seekpoint->psz_name = malloc(i_idLength);
+            memcpy(p_seekpoint->psz_name, p_payload, i_idLength);
+        }
+
+        TAB_APPEND(p_sys->i_seekpoints, p_sys->pp_seekpoints, p_seekpoint);
+    }
 
     return VLC_SUCCESS;
 }
@@ -968,6 +1048,7 @@ static int ID3Parse( demux_t *p_demux,
 
 static int MpgaInit( demux_t *p_demux )
 {
+    //p_demux->info.i_update |= INPUT_UPDATE_TITLE_LIST;
     demux_sys_t *p_sys = p_demux->p_sys;
 
     const uint8_t *p_peek;
