@@ -122,8 +122,8 @@ typedef struct
 typedef struct
 {
     uint32_t i_byte_start;
-    seekpoint_t s_seekpoint;
-} id_seekpoint_t
+    seekpoint_t *p_seekpoint;
+} byte_seekpoint_t;
 
 struct demux_sys_t
 {
@@ -151,8 +151,7 @@ struct demux_sys_t
     int64_t i_stream_offset;
 
     int i_seekpoints;
-    seekpoint_t **pp_seekpoints;
-    u_int32_t *p_seekpoint_bytes;
+    byte_seekpoint_t **pp_byte_seekpoints;
 
 
     float   f_fps;
@@ -389,10 +388,12 @@ static void Close( vlc_object_t * p_this )
     demux_PacketizerDestroy( p_sys->p_packetizer );
     for( int i = 0; i < p_sys->i_seekpoints; i++ )
     {
-        vlc_seekpoint_Delete( p_sys->pp_seekpoints[i] );
+        vlc_seekpoint_Delete( p_sys->pp_byte_seekpoints[i]->p_seekpoint );
+        free(p_sys->pp_byte_seekpoints[i]);
+
     }
     if( p_sys->i_seekpoints > 0)
-        free ( p_sys->pp_seekpoints );
+        free ( p_sys->pp_byte_seekpoints );
     
     free( p_sys );
 }
@@ -465,7 +466,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
                 input_title_t *p_title = (*ppp_title)[0] = vlc_input_title_New();
                 for( int i = 0; i < p_sys->i_seekpoints; i++ )
                 {
-                    seekpoint_t *p_seekpoint_copy = vlc_seekpoint_Duplicate( p_sys->pp_seekpoints[i] );
+                    seekpoint_t *p_seekpoint_copy = vlc_seekpoint_Duplicate( p_sys->pp_byte_seekpoints[i]->p_seekpoint );
                     if ( likely( p_seekpoint_copy ) )
                         TAB_APPEND( p_title->i_seekpoint, p_title->seekpoint, p_seekpoint_copy );
                 }
@@ -482,6 +483,34 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
         }
         case DEMUX_SET_SEEKPOINT:
         {
+            const int i_seekpoint = (int)va_arg( args, int );
+            if (i_seekpoint < p_sys->i_seekpoints && i_seekpoint > 0) 
+            {
+                byte_seekpoint_t *p_byte_seekpoint =  p_sys->pp_byte_seekpoints[i_seekpoint];
+                if (p_byte_seekpoint->i_byte_start == 0xFFFFFFFF) 
+                {
+                    
+                    return demux_Control(p_demux, DEMUX_SET_TIME, p_byte_seekpoint->p_seekpoint->i_time_offset, true );
+                }
+                else
+                {
+                    fprintf(stderr, "had bytes \n");
+
+                    int i_ret = vlc_stream_Seek( p_demux->s,  p_byte_seekpoint->i_byte_start);
+                    if( i_ret != VLC_SUCCESS )
+                        return i_ret;
+
+                    p_sys->i_time_offset = p_byte_seekpoint->p_seekpoint->i_time_offset - p_sys->i_pts;
+
+                    /* And reset buffered data */
+                    if( p_sys->p_packetized_data )
+                        block_ChainRelease( p_sys->p_packetized_data );
+                    p_sys->p_packetized_data = NULL;
+                    return VLC_SUCCESS;
+                }
+            }
+
+
             return VLC_SUCCESS;
         }
 
@@ -1007,10 +1036,12 @@ static int ID3TAG_Parse_Handler( uint32_t i_tag, const uint8_t *p_payload, size_
         int i_idLength = 0;
         for(; p_payload[i_idLength] != 0; i_idLength++) {}
         i_idLength+=1;
+        byte_seekpoint_t *p_byte_seekpoint = malloc(sizeof(byte_seekpoint_t));
+        p_byte_seekpoint->p_seekpoint = vlc_seekpoint_New();
+        p_byte_seekpoint->p_seekpoint->i_time_offset = GetDWBE(p_payload+i_idLength);
+        p_byte_seekpoint->p_seekpoint->i_time_offset *= 1000;
 
-        seekpoint_t *p_seekpoint = vlc_seekpoint_New();
-        p_seekpoint->i_time_offset = (u_int32_t)GetDWBE(p_payload+i_idLength+1);
-        u_int32_t byte_start = (u_int32_t)GetDWBE(p_payload+i_idLength+1+8);
+        p_byte_seekpoint->i_byte_start = (u_int32_t)GetDWBE(p_payload+i_idLength+8);
 
         int i_chapLength = i_idLength+4*4;
         if (i_payload > i_chapLength && memcmp(p_payload+i_chapLength, "TIT2", 4) == 0) 
@@ -1018,15 +1049,15 @@ static int ID3TAG_Parse_Handler( uint32_t i_tag, const uint8_t *p_payload, size_
             int i_dataStart = i_chapLength + 10;
             int i_buf = ID3TAG_ReadSize(p_payload+i_chapLength+4, true);
             char *p_alloc;
-            p_seekpoint->psz_name = ID3TextConvert(p_payload+i_dataStart, i_buf, &p_alloc );
+            p_byte_seekpoint->p_seekpoint->psz_name = ID3TextConvert(p_payload+i_dataStart, i_buf, &p_alloc );
         }
         else
         {
-            p_seekpoint->psz_name = malloc(i_idLength);
-            memcpy(p_seekpoint->psz_name, p_payload, i_idLength);
+            p_byte_seekpoint->p_seekpoint->psz_name = malloc(i_idLength);
+            memcpy(p_byte_seekpoint->p_seekpoint->psz_name, p_payload, i_idLength);
         }
 
-        TAB_APPEND(p_sys->i_seekpoints, p_sys->pp_seekpoints, p_seekpoint);
+        TAB_APPEND(p_sys->i_seekpoints, p_sys->pp_byte_seekpoints, p_byte_seekpoint);
     }
 
     return VLC_SUCCESS;
